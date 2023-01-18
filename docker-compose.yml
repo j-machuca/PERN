@@ -1,0 +1,52 @@
+version: "3.9"
+services:
+  frontend:
+    image: app/frontend
+    build:
+      context: frontend
+      dockerfile: dockerfile
+    networks:
+      - sub-eth0
+    depends_on:
+      - backend
+
+  backend:
+    image: app/backend
+    build:
+      context: backend
+      dockerfile: dockerfile
+    networks:
+      - sub-eth0
+    depends_on:
+      - db
+
+  revproxy:
+    build: ./reverse-proxy
+    networks:
+      - sub-eth0
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+      - backend
+      - frontend
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: testing
+      POSTGRES_USER: admin
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - sub-eth0
+    ports:
+      - "5432:5432"
+
+networks:
+  sub-eth0:
+
+volumes:
+  pgdata:
